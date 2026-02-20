@@ -1,0 +1,46 @@
+<script>
+    let polling = null;
+
+    function updateStatus() {
+        fetch('/status')
+            .then(res => res.json())
+            .then(data => {
+                // Hand status
+                document.getElementById('handStatus').textContent = 
+                    `State: ${data.hand.state} | TI: ${data.hand.ti_dist}`;
+                document.getElementById('tiDistance').textContent = data.hand.ti_dist;
+                document.getElementById('fistStatus').textContent = data.hand.is_fist ? 'Yes' : 'No';
+                
+                // Voice status
+                document.getElementById('voiceStatus').textContent = data.voice.status;
+                document.getElementById('lastCommand').textContent = data.voice.command;
+                
+                // Color coding
+                if (data.hand.state === 'RUNNING') {
+                    document.getElementById('tiDistance').style.color = '#00ff88';
+                }
+            })
+            .catch(err => console.log('Status update error:', err));
+    }
+
+    function startSystems() {
+        fetch('/start', {method: 'POST'})
+            .then(() => {
+                document.querySelector('.btn-start').textContent = '✅ RUNNING';
+                polling = setInterval(updateStatus, 1000);
+            });
+    }
+
+    function stopSystems() {
+        fetch('/stop', {method: 'POST'})
+            .then(() => {
+                document.querySelector('.btn-start').textContent = '🚀 START AI';
+                if (polling) clearInterval(polling);
+                updateStatus();
+            });
+    }
+
+    // Auto update every 2 seconds
+    setInterval(updateStatus, 2000);
+    window.onload = updateStatus;
+</script>
